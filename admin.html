@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0B1B3B" />
+  <title>Teacher Admin Panel — Expert Study</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./assets/logo.png" />
+  <link rel="apple-touch-icon" href="./assets/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="./css/glass-theme.css" />
+  <link rel="stylesheet" href="./css/app.css" />
+</head>
+<body>
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+    <div class="ambient-orb ambient-orb-3"></div>
+    <div class="ambient-orb ambient-orb-4"></div>
+  </div>
+
+  <div id="toast-container" aria-live="polite"></div>
+
+  <div class="app-shell admin-shell">
+    <!-- ==================== ADMIN PASSCODE LOGIN ==================== -->
+    <section id="admin-login-screen" class="auth-screen">
+      <div class="auth-top-utility">
+        <a href="./index.html" class="btn btn-glass btn-sm"><i class="fa-solid fa-arrow-left"></i> Student App</a>
+        <button id="admin-auth-theme-btn" class="btn-icon" type="button" aria-label="Toggle Theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="auth-brand-header">
+        <div class="app-logo-box auth-logo-lg">
+          <img src="./assets/logo.png" alt="Expert Study Logo" data-logo-img />
+          <div class="logo-fallback hidden" aria-hidden="true">
+            <i class="fa-solid fa-chalkboard-user" style="font-size:2.2rem;"></i>
+          </div>
+        </div>
+        <h1 class="auth-title">Teacher Admin Panel</h1>
+        <p class="auth-subtitle">Expert Study • Control Center</p>
+      </div>
+
+      <div class="glass-card-strong auth-card" style="max-width:440px; width:100%; margin:0 auto;">
+        <form id="admin-login-form">
+          <div class="form-group">
+            <label class="form-label" for="admin-passcode-input"><i class="fa-solid fa-shield-halved"></i> Admin Passcode</label>
+            <input type="password" id="admin-passcode-input" class="glass-input" placeholder="Enter teacher passcode" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="admin-login-btn">
+            <i class="fa-solid fa-unlock-keyhole"></i> Unlock Admin Dashboard
+          </button>
+          <p class="auth-helper-note">Default passcode: <strong>expert2026</strong> (editable anytime in Settings)</p>
+        </form>
+      </div>
+
+      <p class="credit-footer">Developed by <strong>Ankesh Kushwaha</strong></p>
+    </section>
+
+    <!-- ==================== ADMIN DASHBOARD SHELL ==================== -->
+    <div id="admin-app-shell" class="hidden">
+      <header class="top-bar">
+        <div class="brand-lockup">
+          <div class="app-logo-box">
+            <img src="./assets/logo.png" alt="Expert Study Logo" data-logo-img />
+            <div class="logo-fallback hidden" aria-hidden="true">
+              <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-name">Admin Control</h1>
+            <span id="firebase-sync-pill" class="sync-pill is-ok" title="Real-time Firebase Firestore Status">
+              <i class="fa-solid fa-circle" style="font-size:0.45rem;"></i> Connecting...
+            </span>
+          </div>
+        </div>
+        <div class="top-bar-actions">
+          <a href="./index.html" class="btn btn-glass btn-xs"><i class="fa-solid fa-mobile-screen"></i> App</a>
+          <button id="admin-header-logout-btn" class="btn btn-danger-soft btn-xs" type="button" title="Logout / Exit Admin">
+            <i class="fa-solid fa-right-from-bracket"></i> Exit
+          </button>
+          <button id="admin-theme-toggle" class="btn-icon" type="button" aria-label="Toggle Theme">
+            <i id="admin-theme-icon" class="fa-solid fa-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="main-content" style="padding-bottom:44px;">
+        <!-- Live Overview Stats -->
+        <div class="admin-stat-grid">
+          <div class="glass-card admin-stat-card">
+            <span class="icon-badge icon-blue"><i class="fa-solid fa-users"></i></span>
+            <div>
+              <div class="admin-stat-num" id="stat-total-students">0</div>
+              <div class="admin-stat-label">Students</div>
+            </div>
+          </div>
+          <div class="glass-card admin-stat-card">
+            <span class="icon-badge icon-violet"><i class="fa-solid fa-video"></i></span>
+            <div>
+              <div class="admin-stat-num" id="stat-total-lectures">0</div>
+              <div class="admin-stat-label">Lectures</div>
+            </div>
+          </div>
+          <div class="glass-card admin-stat-card">
+            <span class="icon-badge icon-rose"><i class="fa-solid fa-file-pdf"></i></span>
+            <div>
+              <div class="admin-stat-num" id="stat-total-notes">0</div>
+              <div class="admin-stat-label">PDF Notes</div>
+            </div>
+          </div>
+          <div class="glass-card admin-stat-card">
+            <span class="icon-badge icon-gold"><i class="fa-solid fa-clipboard-check"></i></span>
+            <div>
+              <div class="admin-stat-num" id="stat-total-tests">0</div>
+              <div class="admin-stat-label">Active Tests</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Horizontally Scrollable 7-Tab Admin Bar -->
+        <div class="admin-tabs-scroll" role="tablist" aria-label="Admin Sections">
+          <button type="button" class="admin-tab-pill active" data-admin-tab="live"><i class="fa-solid fa-tower-broadcast"></i> Go Live</button>
+          <button type="button" class="admin-tab-pill" data-admin-tab="lectures"><i class="fa-solid fa-circle-play"></i> Lectures</button>
+          <button type="button" class="admin-tab-pill" data-admin-tab="pdfs"><i class="fa-solid fa-file-pdf"></i> PDFs</button>
+          <button type="button" class="admin-tab-pill" data-admin-tab="tests"><i class="fa-solid fa-clipboard-check"></i> Tests</button>
+          <button type="button" class="admin-tab-pill" data-admin-tab="notices"><i class="fa-solid fa-bullhorn"></i> Notices</button>
+          <button type="button" class="admin-tab-pill" data-admin-tab="batches"><i class="fa-solid fa-layer-group"></i> Batches</button>
+          <button type="button" class="admin-tab-pill" data-admin-tab="students-settings"><i class="fa-solid fa-sliders"></i> Students & Settings</button>
+        </div>
+
+        <!-- ==================== TAB 1: GO LIVE ==================== -->
+        <section id="admin-tab-live" class="tab-panel" data-admin-panel="live">
+          <div class="glass-card-strong admin-card">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px;">
+              <h2 class="section-title"><i class="fa-solid fa-tower-broadcast" style="color:var(--color-danger);"></i> Go Live Control</h2>
+              <span class="pill-badge pill-gold" id="admin-live-status-badge">Offline</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="live-title-input">Live Class Title</label>
+              <input type="text" id="live-title-input" class="glass-input" placeholder="e.g. Class 10 Science — Board Rapid Revision" />
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="live-url-input">YouTube Live URL</label>
+                <input type="url" id="live-url-input" class="glass-input" placeholder="Paste any YouTube link" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="live-batch-select">Target Batch</label>
+                <select id="live-batch-select" class="glass-select"></select>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" id="toggle-live-btn" class="btn btn-primary" style="flex:1;">
+                <i class="fa-solid fa-satellite-dish"></i> START LIVE CLASS
+              </button>
+              <button type="button" id="clear-live-chat-btn" class="btn btn-danger-soft btn-sm">
+                <i class="fa-solid fa-broom"></i> Clear Chat
+              </button>
+            </div>
+
+            <div class="chat-panel">
+              <div class="chat-header">
+                <span><i class="fa-solid fa-comments" style="color:var(--brand-gold);"></i> Live Doubt Chat (Teacher View)</span>
+                <span class="notice-date" id="admin-chat-count">0 msgs</span>
+              </div>
+              <div class="chat-messages" id="admin-live-chat-messages">
+                <p class="empty-state-sub" style="text-align:center; margin:auto;">No live chat messages yet.</p>
+              </div>
+              <form class="chat-input-row" id="admin-chat-form">
+                <input type="text" id="admin-chat-input" class="glass-input" placeholder="Reply as Teacher..." style="padding:10px 12px;" required />
+                <button type="submit" class="btn btn-gold btn-sm"><i class="fa-solid fa-paper-plane"></i> Send</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== TAB 2: LECTURES (ADD / EDIT / DELETE) ==================== -->
+        <section id="admin-tab-lectures" class="tab-panel hidden" data-admin-panel="lectures">
+          <div class="glass-card admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 class="section-title" id="lec-form-heading"><i class="fa-solid fa-circle-play" style="color:var(--brand-blue);"></i> Add Recorded Lecture</h3>
+              <button type="button" id="cancel-lec-edit-btn" class="btn btn-glass btn-xs hidden">Cancel Edit</button>
+            </div>
+            <form id="add-lecture-form">
+              <input type="hidden" id="edit-lec-id" value="" />
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="lec-batch">Batch</label>
+                  <select id="lec-batch" class="glass-select" required></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="lec-subject">Subject</label>
+                  <select id="lec-subject" class="glass-select" required></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="lec-title">Lecture Title</label>
+                <input type="text" id="lec-title" class="glass-input" placeholder="e.g. Ch 2 Polynomials — Full Concept" required />
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="lec-teacher">Teacher Name</label>
+                  <input type="text" id="lec-teacher" class="glass-input" value="Uttam Sir" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="lec-duration">Duration</label>
+                  <input type="text" id="lec-duration" class="glass-input" placeholder="e.g. 45 mins" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="lec-url">YouTube Video Link (Auto-Parsed)</label>
+                <input type="url" id="lec-url" class="glass-input" placeholder="Paste any youtube.com or youtu.be link" required />
+              </div>
+              <div id="lec-thumb-preview" class="yt-preview-box hidden">
+                <img id="lec-thumb-img" src="" alt="YouTube Thumbnail Preview" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="lec-pdf-url"><i class="fa-solid fa-file-pdf" style="color:var(--color-danger);"></i> Attach Class Notes PDF (Optional Google Drive Link)</label>
+                <input type="url" id="lec-pdf-url" class="glass-input" placeholder="Paste Google Drive share link" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="lec-pdf-title">Class Notes PDF Title (Optional)</label>
+                <input type="text" id="lec-pdf-title" class="glass-input" placeholder="e.g. Lecture Handwritten Notes PDF" />
+              </div>
+              <button type="submit" id="lec-submit-btn" class="btn btn-primary btn-block"><i class="fa-solid fa-cloud-arrow-up"></i> Publish Lecture</button>
+            </form>
+          </div>
+          <div id="admin-lectures-list"></div>
+        </section>
+
+        <!-- ==================== TAB 3: STANDALONE PDFs (ADD / EDIT / DELETE) ==================== -->
+        <section id="admin-tab-pdfs" class="tab-panel hidden" data-admin-panel="pdfs">
+          <div class="glass-card admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 class="section-title" id="note-form-heading"><i class="fa-solid fa-file-pdf" style="color:var(--color-danger);"></i> Add PDF Notes</h3>
+              <button type="button" id="cancel-note-edit-btn" class="btn btn-glass btn-xs hidden">Cancel Edit</button>
+            </div>
+            <form id="add-note-form">
+              <input type="hidden" id="edit-note-id" value="" />
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="note-batch">Batch</label>
+                  <select id="note-batch" class="glass-select" required></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="note-subject">Subject</label>
+                  <select id="note-subject" class="glass-select" required></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="note-title">PDF Title</label>
+                <input type="text" id="note-title" class="glass-input" placeholder="e.g. Ch 1 Formula Sheet & PYQs" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="note-url">Google Drive Share Link (Auto-Converts to /preview)</label>
+                <input type="url" id="note-url" class="glass-input" placeholder="Paste Google Drive link (Anyone with link)" required />
+              </div>
+              <button type="submit" id="note-submit-btn" class="btn btn-primary btn-block"><i class="fa-solid fa-file-circle-plus"></i> Publish PDF Note</button>
+            </form>
+          </div>
+          <div id="admin-notes-list"></div>
+        </section>
+
+        <!-- ==================== TAB 4: MCQ TESTS (CREATE / EDIT / DELETE + SUBMISSIONS) ==================== -->
+        <section id="admin-tab-tests" class="tab-panel hidden" data-admin-panel="tests">
+          <div class="glass-card admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 class="section-title" id="test-form-heading"><i class="fa-solid fa-clipboard-list" style="color:var(--brand-gold);"></i> MCQ Test Creator</h3>
+              <button type="button" id="cancel-test-edit-btn" class="btn btn-glass btn-xs hidden">Cancel Edit</button>
+            </div>
+            <input type="hidden" id="edit-test-id" value="" />
+            <div class="form-group">
+              <label class="form-label" for="test-title-input">Test Title</label>
+              <input type="text" id="test-title-input" class="glass-input" placeholder="e.g. Chapter 1 Science Weekly MCQ" />
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="test-batch-select">Batch</label>
+                <select id="test-batch-select" class="glass-select"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="test-subject-select">Subject</label>
+                <select id="test-subject-select" class="glass-select"></select>
+              </div>
+            </div>
+            <div class="form-row-2" style="align-items:center;">
+              <div class="form-group">
+                <label class="form-label" for="test-duration-input">Duration (Minutes)</label>
+                <input type="number" id="test-duration-input" class="glass-input" min="1" max="180" value="15" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="test-active-select">Status</label>
+                <select id="test-active-select" class="glass-select">
+                  <option value="true">Active (Visible to Students)</option>
+                  <option value="false">Inactive (Hidden)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="segmented-control" style="margin-bottom:14px;">
+              <button type="button" class="segmented-btn active" data-q-mode="single">Single Question</button>
+              <button type="button" class="segmented-btn" data-q-mode="bulk">Fast Bulk Paste</button>
+            </div>
+
+            <!-- Single Question Builder (With Radio Selector & Edit Support) -->
+            <div id="single-q-builder">
+              <input type="hidden" id="edit-q-index" value="-1" />
+              <div class="form-group">
+                <label class="form-label" for="sq-text">Question Text</label>
+                <input type="text" id="sq-text" class="glass-input" placeholder="Type question here..." />
+              </div>
+              <div class="form-row-2">
+                <div class="form-group"><input type="text" id="sq-opt-0" class="glass-input" placeholder="Option A" /></div>
+                <div class="form-group"><input type="text" id="sq-opt-1" class="glass-input" placeholder="Option B" /></div>
+                <div class="form-group"><input type="text" id="sq-opt-2" class="glass-input" placeholder="Option C" /></div>
+                <div class="form-group"><input type="text" id="sq-opt-3" class="glass-input" placeholder="Option D" /></div>
+              </div>
+              <div class="form-group">
+                <span class="form-label">Correct Answer</span>
+                <div style="display:flex; gap:14px; flex-wrap:wrap; padding:6px 4px;">
+                  <label style="display:inline-flex; align-items:center; gap:5px; font-weight:700; font-size:0.85rem;"><input type="radio" name="sq-correct-radio" value="0" checked /> Option A</label>
+                  <label style="display:inline-flex; align-items:center; gap:5px; font-weight:700; font-size:0.85rem;"><input type="radio" name="sq-correct-radio" value="1" /> Option B</label>
+                  <label style="display:inline-flex; align-items:center; gap:5px; font-weight:700; font-size:0.85rem;"><input type="radio" name="sq-correct-radio" value="2" /> Option C</label>
+                  <label style="display:inline-flex; align-items:center; gap:5px; font-weight:700; font-size:0.85rem;"><input type="radio" name="sq-correct-radio" value="3" /> Option D</label>
+                </div>
+              </div>
+              <button type="button" id="add-single-q-btn" class="btn btn-glass btn-block btn-sm"><i class="fa-solid fa-plus"></i> Add Question to Test</button>
+            </div>
+
+            <!-- Fast Bulk Paste -->
+            <div id="bulk-q-builder" class="hidden">
+              <div class="form-group">
+                <label class="form-label" for="bulk-q-textarea">Paste Questions (Q: ... / A) ... B) ... C) ... D) ... / ANS: B)</label>
+                <textarea id="bulk-q-textarea" class="glass-textarea" style="min-height:130px;" placeholder="Q: SI unit of force is?&#10;A) Joule&#10;B) Newton&#10;C) Watt&#10;D) Pascal&#10;ANS: B"></textarea>
+              </div>
+              <button type="button" id="parse-bulk-q-btn" class="btn btn-gold btn-block btn-sm"><i class="fa-solid fa-bolt"></i> Parse & Add Bulk Questions</button>
+            </div>
+
+            <div style="margin-top:16px;">
+              <div class="section-header" style="margin-top:0;">
+                <span class="form-label">Questions in This Test</span>
+                <span class="pill-badge pill-blue" id="draft-q-count">0 Questions</span>
+              </div>
+              <div id="draft-questions-list" style="margin-bottom:12px;"></div>
+              <button type="button" id="publish-test-btn" class="btn btn-primary btn-block">
+                <i class="fa-solid fa-rocket"></i> Publish MCQ Test
+              </button>
+            </div>
+          </div>
+
+          <h3 class="section-title" style="margin:14px 4px 10px;">Published Tests</h3>
+          <div id="admin-tests-list"></div>
+        </section>
+
+        <!-- ==================== TAB 5: NOTICES (ADD / EDIT / DELETE) ==================== -->
+        <section id="admin-tab-notices" class="tab-panel hidden" data-admin-panel="notices">
+          <div class="glass-card admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 class="section-title" id="notice-form-heading"><i class="fa-solid fa-bullhorn" style="color:var(--brand-gold);"></i> Post Announcement</h3>
+              <button type="button" id="cancel-notice-edit-btn" class="btn btn-glass btn-xs hidden">Cancel Edit</button>
+            </div>
+            <form id="add-notice-form">
+              <input type="hidden" id="edit-notice-id" value="" />
+              <div class="form-group">
+                <label class="form-label" for="notice-batch">Target Batch</label>
+                <select id="notice-batch" class="glass-select"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="notice-title">Notice Heading</label>
+                <input type="text" id="notice-title" class="glass-input" placeholder="e.g. Sunday Mega Test Schedule" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="notice-message">Message</label>
+                <textarea id="notice-message" class="glass-textarea" placeholder="Write the full announcement..." required></textarea>
+              </div>
+              <button type="submit" id="notice-submit-btn" class="btn btn-gold btn-block"><i class="fa-solid fa-paper-plane"></i> Post Notice</button>
+            </form>
+          </div>
+          <div id="admin-notices-list"></div>
+        </section>
+
+        <!-- ==================== TAB 6: BATCHES (ADD / EDIT / DELETE + DEFAULT HELPER) ==================== -->
+        <section id="admin-tab-batches" class="tab-panel hidden" data-admin-panel="batches">
+          <div id="default-batches-helper" class="glass-card admin-card hidden" style="text-align:center;">
+            <p class="empty-state-title" style="margin-top:0;">No Batches Found in Firebase</p>
+            <p class="empty-state-sub" style="margin-bottom:12px;">Create your starter Class 9 & Class 10 batches in 1 click, or add a custom batch below.</p>
+            <button type="button" id="create-default-batches-btn" class="btn btn-gold btn-sm">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Create Default Class 9 & 10 Batches
+            </button>
+          </div>
+
+          <div class="glass-card admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 class="section-title" id="batch-form-heading"><i class="fa-solid fa-layer-group" style="color:var(--brand-violet);"></i> Add / Update Batch</h3>
+              <button type="button" class="btn btn-glass btn-xs hidden" id="cancel-batch-edit-btn">Cancel Edit</button>
+            </div>
+            <form id="add-batch-form">
+              <input type="hidden" id="edit-batch-id" value="" />
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="batch-classname">Class Name</label>
+                  <input type="text" id="batch-classname" class="glass-input" placeholder="e.g. Class 10" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="batch-color">Banner Theme</label>
+                  <select id="batch-color" class="glass-select">
+                    <option value="theme-blue">Royal Blue</option>
+                    <option value="theme-gold">Warm Gold</option>
+                    <option value="theme-emerald">Emerald Green</option>
+                    <option value="theme-violet">Deep Violet</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="batch-name">Full Batch Name</label>
+                <input type="text" id="batch-name" class="glass-input" placeholder="e.g. Class 10 — Board Topper Batch" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="batch-tagline">Tagline</label>
+                <input type="text" id="batch-tagline" class="glass-input" placeholder="e.g. Complete Board Syllabus + PYQs" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="batch-subjects">Subjects (comma-separated)</label>
+                <input type="text" id="batch-subjects" class="glass-input" value="Maths, Science, Hindi, English, Social Science" required />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block" id="save-batch-btn"><i class="fa-solid fa-floppy-disk"></i> Save Batch</button>
+            </form>
+          </div>
+          <div id="admin-batches-list"></div>
+        </section>
+
+        <!-- ==================== TAB 7: STUDENTS & APP SETTINGS ==================== -->
+        <section id="admin-tab-students-settings" class="tab-panel hidden" data-admin-panel="students-settings">
+          <h3 class="section-title" style="margin:0 4px 10px;"><i class="fa-solid fa-users" style="color:var(--brand-blue);"></i> Registered Students</h3>
+          <div class="glass-card admin-card" style="padding:14px;">
+            <div class="form-row-2">
+              <input type="search" id="student-search-input" class="glass-input" placeholder="Search name or phone..." />
+              <select id="student-status-filter" class="glass-select">
+                <option value="all">All Statuses</option>
+                <option value="approved">Approved</option>
+                <option value="pending">Pending</option>
+                <option value="blocked">Blocked</option>
+              </select>
+            </div>
+          </div>
+          <div id="admin-students-list" style="margin-bottom:22px;"></div>
+
+          <div class="glass-card admin-card">
+            <h3 class="section-title" style="margin-bottom:14px;"><i class="fa-solid fa-sliders" style="color:var(--brand-gold);"></i> App & Coaching Settings</h3>
+            <form id="app-settings-form">
+              <div class="form-group">
+                <label class="form-label" for="set-app-name">Coaching / App Name</label>
+                <input type="text" id="set-app-name" class="glass-input" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="set-tagline">Tagline</label>
+                <input type="text" id="set-tagline" class="glass-input" required />
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="set-whatsapp">WhatsApp Number (with 91)</label>
+                  <input type="tel" id="set-whatsapp" class="glass-input" placeholder="e.g. 919876543210" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="set-passcode">Admin Passcode</label>
+                  <input type="text" id="set-passcode" class="glass-input" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="set-hero-title">Home Hero Banner Title</label>
+                <input type="text" id="set-hero-title" class="glass-input" placeholder="Board Topper Batch 2026" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="set-hero-subtitle">Home Hero Banner Subtitle</label>
+                <input type="text" id="set-hero-subtitle" class="glass-input" placeholder="Complete NCERT + PYQs + Weekly MCQ Tests" />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-floppy-disk"></i> Save All Settings</button>
+            </form>
+          </div>
+
+          <button type="button" id="admin-logout-btn" class="btn btn-danger-soft btn-block">
+            <i class="fa-solid fa-right-from-bracket"></i> Lock Admin Panel
+          </button>
+          <p class="credit-footer">Developed by <strong>Ankesh Kushwaha</strong></p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- IN-APP DELETE CONFIRMATION MODAL -->
+  <div id="admin-confirm-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="glass-modal" style="max-width:380px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--color-danger);"></i> Confirm Delete</h3>
+        <button type="button" class="btn-icon" id="cancel-delete-modal" aria-label="Cancel"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="empty-state-sub" id="confirm-delete-text" style="margin-bottom:16px;">Are you sure you want to permanently delete this item?</p>
+        <div style="display:flex; gap:10px;">
+          <button type="button" id="confirm-delete-no" class="btn btn-glass" style="flex:1;">Cancel</button>
+          <button type="button" id="confirm-delete-yes" class="btn btn-danger" style="flex:1;">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST SUBMISSIONS / SCORES MODAL -->
+  <div id="test-submissions-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="glass-modal" style="max-width:480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="submissions-modal-title"><i class="fa-solid fa-chart-column" style="color:var(--brand-blue);"></i> Student Scores</h3>
+        <button type="button" class="btn-icon" id="close-submissions-modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="submissions-modal-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/admin-app.js"></script>
+</body>
+</html>

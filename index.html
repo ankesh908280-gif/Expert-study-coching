@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1D4ED8" />
+  <title>Expert Study — Learn • Practice • Excel</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./assets/logo.png" />
+  <link rel="apple-touch-icon" href="./assets/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="./css/glass-theme.css" />
+  <link rel="stylesheet" href="./css/app.css" />
+</head>
+<body>
+  <!-- Vibrant Animated Ambient Mesh Orbs -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+    <div class="ambient-orb ambient-orb-3"></div>
+    <div class="ambient-orb ambient-orb-4"></div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Floating Exit Button for CSS Theatre Full-Screen Fallback -->
+  <button type="button" id="theatre-exit-btn" class="theatre-exit-btn hidden">
+    <i class="fa-solid fa-compress"></i> Exit Full Screen
+  </button>
+
+  <div class="app-shell">
+    <!-- ==================== AUTH / SPLASH SCREEN ==================== -->
+    <section id="auth-screen" class="auth-screen">
+      <div class="auth-top-utility">
+        <span class="pill-badge pill-blue"><i class="fa-solid fa-graduation-cap"></i> Student Portal</span>
+        <button id="auth-theme-toggle" class="btn-icon" type="button" aria-label="Toggle Light or Dark Glass Mode">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="auth-brand-header">
+        <div class="app-logo-box auth-logo-lg" id="auth-secret-logo">
+          <img src="./assets/logo.png" alt="Expert Study Logo" data-logo-img />
+          <div class="logo-fallback hidden" aria-hidden="true">
+            <i class="fa-solid fa-graduation-cap" style="font-size:2.3rem;"></i>
+          </div>
+        </div>
+        <h1 class="auth-title" id="auth-app-name">Expert Study</h1>
+        <p class="auth-subtitle" id="auth-app-tagline">Learn • Practice • Excel</p>
+      </div>
+
+      <div class="glass-card-strong auth-card">
+        <div class="segmented-control" role="tablist" aria-label="Authentication Mode">
+          <button type="button" class="segmented-btn active" id="auth-tab-login" data-auth-mode="login" role="tab" aria-selected="true">
+            <i class="fa-solid fa-right-to-bracket"></i> Student Login
+          </button>
+          <button type="button" class="segmented-btn" id="auth-tab-register" data-auth-mode="register" role="tab" aria-selected="false">
+            <i class="fa-solid fa-user-plus"></i> New Student
+          </button>
+        </div>
+
+        <form id="login-form" class="auth-form" autocomplete="on">
+          <div class="form-group">
+            <label class="form-label" for="login-phone"><i class="fa-solid fa-mobile-screen-button"></i> Mobile Number (10 digits)</label>
+            <input class="glass-input" type="tel" id="login-phone" inputmode="numeric" maxlength="10" placeholder="e.g. 9876543210" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password"><i class="fa-solid fa-lock"></i> Password</label>
+            <input class="glass-input" type="password" id="login-password" placeholder="Enter your password" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="login-submit-btn">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Login to Classroom
+          </button>
+          <p class="auth-helper-note">New here? Switch to <strong>New Student</strong> above to register with your mobile number.</p>
+        </form>
+
+        <form id="register-form" class="auth-form hidden" autocomplete="on">
+          <div class="form-group">
+            <label class="form-label" for="reg-name"><i class="fa-solid fa-user"></i> Full Name</label>
+            <input class="glass-input" type="text" id="reg-name" placeholder="Enter your full name" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-phone"><i class="fa-solid fa-mobile-screen-button"></i> Mobile Number (10 digits)</label>
+            <input class="glass-input" type="tel" id="reg-phone" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-batch"><i class="fa-solid fa-layer-group"></i> Select Your Batch</label>
+            <select class="glass-select" id="reg-batch" required>
+              <option value="">Loading batches...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-password"><i class="fa-solid fa-key"></i> Create Password</label>
+            <input class="glass-input" type="password" id="reg-password" minlength="4" placeholder="At least 4 characters" required />
+          </div>
+          <button type="submit" class="btn btn-gold btn-block" id="reg-submit-btn">
+            <i class="fa-solid fa-rocket"></i> Join Expert Study
+          </button>
+        </form>
+      </div>
+
+      <p class="credit-footer">Developed by <strong>Ankesh Kushwaha</strong></p>
+    </section>
+
+    <!-- ==================== BLOCKED / PENDING STATUS SCREEN ==================== -->
+    <section id="status-alert-screen" class="auth-screen hidden">
+      <div class="glass-card-strong status-alert-card">
+        <div class="icon-badge icon-rose" style="width:62px; height:62px; font-size:1.5rem;" id="status-alert-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h2 class="auth-title" style="font-size:1.35rem;" id="status-alert-title">Account Pending Approval</h2>
+        <p class="empty-state-sub" id="status-alert-message">Your account is currently under review by your teacher.</p>
+        <button type="button" class="btn btn-glass btn-block" id="status-logout-btn">
+          <i class="fa-solid fa-arrow-left"></i> Back to Login
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== MAIN STUDENT APP SHELL ==================== -->
+    <div id="student-app-shell" class="hidden">
+      <header class="top-bar">
+        <div class="brand-lockup" id="secret-logo-trigger" title="Expert Study">
+          <div class="app-logo-box">
+            <img src="./assets/logo.png" alt="Expert Study Logo" data-logo-img />
+            <div class="logo-fallback hidden" aria-hidden="true">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-name" id="header-app-name">Expert Study</h1>
+            <p class="brand-tagline" id="header-app-tagline">Learn • Practice • Excel</p>
+          </div>
+        </div>
+
+        <div class="top-bar-actions">
+          <button id="theme-toggle-btn" class="btn-icon" type="button" aria-label="Toggle Dark Glass Mode" title="Toggle Theme">
+            <i id="theme-icon-fa" class="fa-solid fa-moon"></i>
+          </button>
+          <button id="notif-bell-btn" class="btn-icon" type="button" aria-label="Notices" title="Latest Notices">
+            <i class="fa-solid fa-bell"></i>
+            <span id="notif-dot" class="notif-dot hidden"></span>
+          </button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <!-- PWA Install Prompt Banner -->
+        <div id="pwa-install-banner" class="glass-card pwa-install-banner hidden">
+          <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+            <div class="app-logo-box" style="width:36px; height:36px; border-radius:10px;">
+              <img src="./assets/logo.png" alt="" data-logo-img />
+              <div class="logo-fallback hidden"><i class="fa-solid fa-download"></i></div>
+            </div>
+            <div style="min-width:0;">
+              <div class="lecture-title" style="margin:0; font-size:0.84rem;">Install Expert Study App</div>
+              <div class="notice-date">Fast full-screen experience on your phone</div>
+            </div>
+          </div>
+          <button type="button" id="pwa-install-btn" class="btn btn-primary btn-xs">Install</button>
+        </div>
+
+        <!-- TAB 1: HOME DASHBOARD -->
+        <section id="tab-home" class="tab-panel" data-tab-panel="home">
+          <div class="glass-card hero-greeting">
+            <div>
+              <p class="greeting-label">Welcome back,</p>
+              <h2 class="greeting-name" id="home-student-name">Student</h2>
+              <span class="pill-badge pill-blue" id="home-batch-badge"><i class="fa-solid fa-award"></i> Loading Batch...</span>
+            </div>
+            <div class="greeting-avatar" id="home-student-avatar" style="overflow:hidden;">S</div>
+          </div>
+
+          <!-- Hero Banner Carousel -->
+          <div class="hero-carousel-wrap">
+            <div class="hero-carousel-track" id="hero-carousel-track">
+              <div class="hero-slide hero-slide-1">
+                <i class="fa-solid fa-trophy hero-slide-deco" aria-hidden="true"></i>
+                <div>
+                  <span class="hero-slide-badge"><i class="fa-solid fa-sparkles"></i> Featured</span>
+                  <h3 class="hero-slide-title" id="hero-banner-title">Board Topper Batch 2026</h3>
+                  <p class="hero-slide-sub" id="hero-banner-subtitle">Complete NCERT + PYQs + Weekly MCQ Tests</p>
+                </div>
+                <button type="button" class="btn btn-gold btn-sm" style="align-self:flex-start;" data-hero-cta="batch">
+                  <i class="fa-solid fa-play"></i> Start Studying
+                </button>
+              </div>
+
+              <div class="hero-slide hero-slide-2">
+                <i class="fa-solid fa-tower-broadcast hero-slide-deco" aria-hidden="true"></i>
+                <div>
+                  <span class="hero-slide-badge"><i class="fa-solid fa-bolt"></i> Interactive</span>
+                  <h3 class="hero-slide-title">Live Doubt Sessions</h3>
+                  <p class="hero-slide-sub">Join live classes & chat directly with your teachers in real time</p>
+                </div>
+                <button type="button" class="btn btn-glass btn-sm" style="align-self:flex-start; color:#0B1B3B;" data-hero-cta="live">
+                  <i class="fa-solid fa-video"></i> Check Live Class
+                </button>
+              </div>
+
+              <div class="hero-slide hero-slide-3">
+                <i class="fa-solid fa-ranking-star hero-slide-deco" aria-hidden="true"></i>
+                <div>
+                  <span class="hero-slide-badge"><i class="fa-solid fa-fire"></i> Exam Ready</span>
+                  <h3 class="hero-slide-title">Weekly MCQ Test Series</h3>
+                  <p class="hero-slide-sub">Timed chapter tests with instant answer review & Top-10 Rank</p>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" style="align-self:flex-start;" data-hero-cta="tests">
+                  <i class="fa-solid fa-clipboard-check"></i> Attempt Test
+                </button>
+              </div>
+            </div>
+            <div class="hero-dots" id="hero-dots">
+              <button type="button" class="hero-dot active" data-slide="0" aria-label="Slide 1"></button>
+              <button type="button" class="hero-dot" data-slide="1" aria-label="Slide 2"></button>
+              <button type="button" class="hero-dot" data-slide="2" aria-label="Slide 3"></button>
+            </div>
+          </div>
+
+          <!-- Real-Time Live Class Card -->
+          <div id="live-banner-card" class="glass-card live-banner-card">
+            <div class="live-banner-top">
+              <span class="pill-badge pill-gold" id="live-status-pill"><i class="fa-solid fa-satellite-dish"></i> Live Classroom</span>
+              <span class="notice-date" id="live-batch-label">Offline</span>
+            </div>
+            <h3 class="live-banner-title" id="live-banner-title">No Live Class Right Now</h3>
+            <p class="live-banner-sub" id="live-banner-sub">When your teacher goes live, a Join Live Class button appears here automatically.</p>
+            <button type="button" id="join-live-btn" class="btn btn-gold btn-sm hidden">
+              <i class="fa-solid fa-video"></i> Join Live Class
+            </button>
+          </div>
+
+          <div class="quick-grid">
+            <button type="button" class="glass-card glass-card-interactive quick-card" id="quick-go-batch">
+              <div class="icon-badge icon-blue"><i class="fa-solid fa-book-open-reader"></i></div>
+              <div>
+                <div class="quick-card-title">My Batch</div>
+                <div class="quick-card-sub">HD Videos & PDF Notes</div>
+              </div>
+            </button>
+            <button type="button" class="glass-card glass-card-interactive quick-card" id="quick-go-tests">
+              <div class="icon-badge icon-gold"><i class="fa-solid fa-trophy"></i></div>
+              <div>
+                <div class="quick-card-title">Practice Tests</div>
+                <div class="quick-card-sub">MCQ Arena & Ranks</div>
+              </div>
+            </button>
+          </div>
+
+          <div class="section-header">
+            <h3 class="section-title"><i class="fa-solid fa-circle-play" style="color:var(--brand-blue);"></i> Recent Lectures</h3>
+            <button type="button" class="section-action" id="home-see-all-lectures">See All <i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <div id="home-recent-lectures" class="h-scroll-row">
+            <div class="skeleton skeleton-card" style="min-width:220px;"></div>
+          </div>
+
+          <div class="section-header" id="notices-section">
+            <h3 class="section-title"><i class="fa-solid fa-bullhorn" style="color:var(--brand-gold);"></i> Latest Notices</h3>
+            <span class="pill-badge pill-gold" id="notices-count-badge">0</span>
+          </div>
+          <div id="home-notices-list" class="notice-list">
+            <div class="skeleton skeleton-card"></div>
+          </div>
+        </section>
+
+        <!-- TAB 2: MY BATCH -->
+        <section id="tab-batch" class="tab-panel hidden" data-tab-panel="batch">
+          <div class="batch-cover-card" id="batch-cover-card">
+            <i class="fa-solid fa-graduation-cap batch-cover-deco" aria-hidden="true"></i>
+            <div>
+              <span class="hero-slide-badge" id="batch-class-pill"><i class="fa-solid fa-bookmark"></i> Active Batch</span>
+              <h2 class="batch-title-lg" id="batch-current-name">My Batch</h2>
+              <p class="batch-tagline-sm" id="batch-current-tagline">Select a subject to start learning</p>
+            </div>
+            <select class="glass-select" id="batch-switcher-select" aria-label="Switch Batch"></select>
+          </div>
+
+          <div id="subject-chips-container" class="subject-grid" role="tablist" aria-label="Subjects"></div>
+
+          <div class="segmented-control" role="tablist" aria-label="Content Type">
+            <button type="button" class="segmented-btn active" id="seg-lectures" data-batch-content="lectures" role="tab" aria-selected="true">
+              <i class="fa-solid fa-clapperboard"></i> Recorded Lectures
+            </button>
+            <button type="button" class="segmented-btn" id="seg-notes" data-batch-content="notes" role="tab" aria-selected="false">
+              <i class="fa-solid fa-file-pdf"></i> PDF Notes
+            </button>
+          </div>
+
+          <div id="batch-content-list" class="content-list">
+            <div class="skeleton skeleton-card"></div>
+          </div>
+        </section>
+
+        <!-- TAB 3: TESTS & LEADERBOARD -->
+        <section id="tab-tests" class="tab-panel hidden" data-tab-panel="tests">
+          <div id="tests-view-container">
+            <div class="skeleton skeleton-card"></div>
+          </div>
+        </section>
+
+        <!-- TAB 4: PROFILE (With Edit Profile & Tap-to-Edit Avatar) -->
+        <section id="tab-profile" class="tab-panel hidden" data-tab-panel="profile">
+          <div class="glass-card profile-cover-card">
+            <div class="profile-cover-banner"></div>
+            <div class="profile-cover-body">
+              <div class="profile-avatar-wrap" id="profile-avatar-trigger" title="Tap to edit profile photo">
+                <div class="profile-avatar-lg" id="profile-avatar">S</div>
+                <span class="avatar-edit-badge"><i class="fa-solid fa-camera"></i></span>
+              </div>
+              <h2 class="greeting-name" style="margin:0 0 6px;" id="profile-name">Student</h2>
+              <span class="pill-badge pill-blue" id="profile-batch-name"><i class="fa-solid fa-layer-group"></i> Batch</span>
+              <p class="notice-date" style="margin:8px 0 10px;" id="profile-phone">+91 —</p>
+              <button type="button" id="open-edit-profile-btn" class="btn btn-glass btn-xs" style="margin-bottom:4px;">
+                <i class="fa-solid fa-pen"></i> Edit Profile & Avatar
+              </button>
+
+              <div class="stat-3-grid">
+                <div class="mini-stat-tile">
+                  <div class="mini-stat-val" style="color:var(--brand-blue);" id="stat-tests-taken">0</div>
+                  <div class="mini-stat-label">Tests Taken</div>
+                </div>
+                <div class="mini-stat-tile">
+                  <div class="mini-stat-val" style="color:var(--color-success);" id="stat-avg-score">0%</div>
+                  <div class="mini-stat-label">Avg Score</div>
+                </div>
+                <div class="mini-stat-tile">
+                  <div class="mini-stat-val" style="color:var(--brand-gold-deep);" id="stat-best-rank">—</div>
+                  <div class="mini-stat-label">Best Rank</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card action-list-card">
+            <div class="action-row-btn" style="cursor:default;">
+              <div class="action-row-left">
+                <span class="icon-badge icon-badge-sm icon-violet"><i class="fa-solid fa-moon"></i></span>
+                <div>
+                  <span class="action-row-title">Dark Glass Mode</span>
+                  <span class="action-row-sub">Switch between Light & Dark OriginOS Glass</span>
+                </div>
+              </div>
+              <button type="button" class="ios-switch" id="profile-theme-switch" role="switch" aria-checked="false" aria-label="Toggle Dark Glass Mode"></button>
+            </div>
+
+            <button type="button" id="whatsapp-support-btn" class="action-row-btn">
+              <div class="action-row-left">
+                <span class="icon-badge icon-badge-sm icon-emerald"><i class="fa-brands fa-whatsapp"></i></span>
+                <div>
+                  <span class="action-row-title">WhatsApp Support</span>
+                  <span class="action-row-sub">Ask batch or fee doubts directly</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);"></i>
+            </button>
+
+            <button type="button" id="logout-btn" class="action-row-btn">
+              <div class="action-row-left">
+                <span class="icon-badge icon-badge-sm icon-rose"><i class="fa-solid fa-right-from-bracket"></i></span>
+                <div>
+                  <span class="action-row-title" style="color:var(--color-danger);">Logout</span>
+                  <span class="action-row-sub">Sign out & switch student account</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right" style="color:var(--color-danger);"></i>
+            </button>
+          </div>
+
+          <p class="credit-footer">Developed by <strong>Ankesh Kushwaha</strong></p>
+        </section>
+      </main>
+
+      <nav class="floating-nav-wrap" aria-label="Primary Navigation">
+        <div class="floating-nav">
+          <button type="button" class="nav-item active" data-tab="home"><i class="fa-solid fa-house"></i><span>Home</span></button>
+          <button type="button" class="nav-item" data-tab="batch"><i class="fa-solid fa-book-open"></i><span>My Batch</span></button>
+          <button type="button" class="nav-item" data-tab="tests"><i class="fa-solid fa-clipboard-list"></i><span>Tests</span></button>
+          <button type="button" class="nav-item" data-tab="profile"><i class="fa-solid fa-circle-user"></i><span>Profile</span></button>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ==================== FULL-SCREEN PW / YOUTUBE WATCH PAGE (RECORDED) ==================== -->
+  <div id="video-watch-page" class="watch-page-overlay" role="dialog" aria-modal="true" aria-labelledby="video-modal-title">
+    <header class="watch-header">
+      <button type="button" class="btn-icon" id="close-video-modal" aria-label="Back">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <h3 class="watch-header-title" id="video-modal-title">Lecture Player</h3>
+      <button type="button" class="btn btn-glass btn-xs" id="video-fullscreen-btn" title="Full Screen / Rotate">
+        <i class="fa-solid fa-expand"></i> Full Screen
+      </button>
+    </header>
+
+    <div class="watch-player-sticky" id="video-player-container">
+      <div class="watch-video-16-9">
+        <iframe
+          id="video-player-iframe"
+          src=""
+          title="Recorded Lecture"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+          allowfullscreen
+          webkitallowfullscreen
+          mozallowfullscreen></iframe>
+      </div>
+    </div>
+
+    <div class="watch-body-scroll">
+      <div class="glass-card watch-meta-card">
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px;">
+          <span class="pill-badge pill-blue" id="video-modal-subject">Subject</span>
+          <span class="notice-date" id="video-modal-meta">Teacher • Duration</span>
+        </div>
+        <h2 class="batch-title-lg" id="video-watch-heading" style="font-size:1.05rem;">Lecture Title</h2>
+        <div class="watch-actions-strip">
+          <button type="button" id="watch-open-attached-pdf" class="btn btn-gold btn-xs hidden">
+            <i class="fa-solid fa-file-pdf"></i> Open Class Notes PDF
+          </button>
+          <a id="video-open-external" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-glass btn-xs">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Video Externally
+          </a>
+        </div>
+      </div>
+
+      <div class="segmented-control" style="margin-bottom:14px;">
+        <button type="button" class="segmented-btn active" id="watch-tab-upnext" data-watch-tab="upnext">
+          <i class="fa-solid fa-list-ul"></i> Up Next
+        </button>
+        <button type="button" class="segmented-btn" id="watch-tab-pdf" data-watch-tab="pdf">
+          <i class="fa-solid fa-file-pdf"></i> Class Notes PDF
+        </button>
+      </div>
+
+      <div id="watch-upnext-panel" class="content-list" style="margin-top:0;"></div>
+      <div id="watch-pdf-panel" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- ==================== FULL-SCREEN PW / YOUTUBE WATCH PAGE (LIVE + CHAT) ==================== -->
+  <div id="live-class-modal" class="watch-page-overlay" role="dialog" aria-modal="true" aria-labelledby="live-modal-title">
+    <header class="watch-header">
+      <button type="button" class="btn-icon" id="close-live-modal" aria-label="Back">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <span class="pill-badge pill-live"><span class="live-dot"></span>LIVE</span>
+      <h3 class="watch-header-title" id="live-modal-title">Live Classroom</h3>
+      <button type="button" class="btn btn-glass btn-xs" id="live-fullscreen-btn" title="Full Screen / Rotate">
+        <i class="fa-solid fa-expand"></i>
+      </button>
+      <a id="live-open-external" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-glass btn-xs" title="Open Video Externally">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
+    </header>
+
+    <div class="watch-player-sticky" id="live-player-container">
+      <div class="watch-video-16-9">
+        <iframe
+          id="live-player-iframe"
+          src=""
+          title="Live Class Stream"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+          allowfullscreen
+          webkitallowfullscreen
+          mozallowfullscreen></iframe>
+      </div>
+    </div>
+
+    <div id="live-chat-container" class="watch-live-chat-wrap"></div>
+  </div>
+
+  <!-- ==================== IN-APP PDF VIEWER MODAL ==================== -->
+  <div id="pdf-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="pdf-modal-title">
+    <div class="glass-modal pdf-modal-shell">
+      <div class="modal-header">
+        <h3 class="modal-title" id="pdf-modal-title">PDF Notes</h3>
+        <button type="button" class="btn-icon" id="close-pdf-modal" aria-label="Close PDF Viewer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:10px; display:flex; flex-direction:column;">
+        <iframe id="pdf-viewer-iframe" class="pdf-viewer-frame" src="" title="PDF Notes Viewer"></iframe>
+      </div>
+      <div class="modal-footer">
+        <span class="pill-badge pill-gold" id="pdf-modal-subject">PDF</span>
+        <a id="pdf-open-external" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Externally
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== EDIT STUDENT PROFILE MODAL ==================== -->
+  <div id="edit-profile-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title">
+    <div class="glass-modal" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="edit-profile-title"><i class="fa-solid fa-user-pen" style="color:var(--brand-blue);"></i> Edit Profile</h3>
+        <button type="button" class="btn-icon" id="close-edit-profile-modal" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-profile-form">
+          <div style="text-align:center; margin-bottom:14px;">
+            <div class="profile-avatar-lg" id="edit-avatar-preview" style="margin:0 auto 10px; overflow:hidden;">S</div>
+            <label for="avatar-file-input" class="btn btn-glass btn-xs" style="cursor:pointer;">
+              <i class="fa-solid fa-image"></i> Upload from Gallery
+            </label>
+            <input type="file" id="avatar-file-input" accept="image/*" class="hidden" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Or Choose a Preset Avatar</label>
+            <div class="preset-avatar-grid" id="preset-avatar-grid"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-profile-name">Full Name</label>
+            <input type="text" id="edit-profile-name" class="glass-input" placeholder="Enter your full name" required />
+          </div>
+
+          <button type="submit" id="save-profile-btn" class="btn btn-primary btn-block">
+            <i class="fa-solid fa-floppy-disk"></i> Save Profile Changes
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECRET 5-TAP ADMIN PASSCODE MODAL ==================== -->
+  <div id="secret-admin-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="secret-admin-title">
+    <div class="glass-modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="secret-admin-title"><i class="fa-solid fa-shield-halved" style="color:var(--brand-gold);"></i> Teacher Access</h3>
+        <button type="button" class="btn-icon" id="close-secret-admin-modal" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="secret-admin-form">
+          <div class="form-group">
+            <label class="form-label" for="secret-admin-passcode">Enter Admin Passcode</label>
+            <input type="password" id="secret-admin-passcode" class="glass-input" placeholder="Passcode" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-unlock-keyhole"></i> Unlock Admin Panel</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FULL-SCREEN EXAM ARENA OVERLAY ==================== -->
+  <div id="exam-arena-overlay" class="exam-overlay hidden"></div>
+
+  <script type="module" src="./js/student-app.js"></script>
+  <script type="module" src="./js/live-test.js"></script>
+</body>
+</html>
