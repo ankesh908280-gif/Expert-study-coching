@@ -1549,3 +1549,26 @@
 .sync-pill.is-err { background: var(--color-danger-soft); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.35); }
 [data-theme="dark"] .sync-pill.is-ok { color: #34D399; }
 [data-theme="dark"] .sync-pill.is-err { color: #FCA5A5; }
+
+/* ==========================================================================
+   Final QA Fix: True 100% Edge-to-Edge Full-Screen Video (No 46dvh Shrinking)
+   ========================================================================== */
+.watch-theatre-fullscreen .watch-video-16-9,
+.watch-player-sticky:fullscreen .watch-video-16-9,
+.watch-player-sticky:-webkit-full-screen .watch-video-16-9 {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+}
+
+.watch-player-sticky:fullscreen,
+.watch-player-sticky:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #000000 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
