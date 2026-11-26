@@ -21,7 +21,9 @@ import {
   showToast,
   formatDate,
   escapeHtml,
-  safeStorage
+  safeStorage,
+  hashSecret,
+  verifySecret
 } from "./utils.js";
 
 const STORAGE_PHONE_KEY = "expert_study_student_phone";
@@ -35,6 +37,8 @@ const state = {
     tagline: "Learn • Practice • Excel",
     whatsappNumber: "",
     adminPasscode: "expert2026",
+    autoApproveStudents: true,
+    lockStudentBatch: false,
     heroBanner: {
       title: "Board Topper Batch 2026",
       subtitle: "Complete NCERT + PYQs + Weekly MCQ Tests",
@@ -150,6 +154,55 @@ async function exitFullScreenVideo() {
   }
 }
 
+function onNativeFullscreenChange() {
+  const activeFs = document.fullscreenElement || document.webkitFullscreenElement;
+  if (!activeFs && state.theatreTargetEl) {
+    state.theatreTargetEl.classList.remove("watch-theatre-fullscreen");
+    state.theatreTargetEl = null;
+    document.getElementById("theatre-exit-btn").classList.add("hidden");
+  }
+}
+document.addEventListener("fullscreenchange", onNativeFullscreenChange);
+document.addEventListener("webkitfullscreenchange", onNativeFullscreenChange);
+
+function pushOverlayHistory() {
+  try {
+    window.history.pushState({ expertStudyOverlay: true }, "");
+  } catch {
+    // Ignore in restricted contexts
+  }
+}
+
+window.addEventListener("popstate", () => {
+  if (state.theatreTargetEl) {
+    exitFullScreenVideo();
+    return;
+  }
+  if (document.getElementById("pdf-modal").classList.contains("open")) {
+    closePdfModal();
+    return;
+  }
+  if (document.getElementById("video-watch-page").classList.contains("open")) {
+    closeVideoModal();
+    return;
+  }
+  if (document.getElementById("live-class-modal").classList.contains("open")) {
+    closeLiveClassModal();
+    return;
+  }
+  if (document.getElementById("edit-profile-modal").classList.contains("open")) {
+    closeEditProfileModal();
+    return;
+  }
+  if (document.getElementById("secret-admin-modal").classList.contains("open")) {
+    document.getElementById("secret-admin-modal").classList.remove("open");
+    return;
+  }
+  if (window.ExpertStudyHooks && typeof window.ExpertStudyHooks.handleBackButton === "function") {
+    window.ExpertStudyHooks.handleBackButton();
+  }
+});
+
 // ==================== SECRET 5-TAP ADMIN UNLOCK (TOUCH-SAFE) ====================
 function initSecretAdminUnlock() {
   let tapCount = 0;
@@ -168,7 +221,8 @@ function initSecretAdminUnlock() {
       tapCount = 0;
       firstTapTime = 0;
       document.getElementById("secret-admin-passcode").value = "";
-      document.getElementById("secret-admin-modal").classList.add("open");
+      pushOverlayHistory();
+  document.getElementById("secret-admin-modal").classList.add("open");
       setTimeout(() => document.getElementById("secret-admin-passcode").focus(), 120);
     }
   };
@@ -188,11 +242,12 @@ function initSecretAdminUnlock() {
     }
   });
 
-  document.getElementById("secret-admin-form").addEventListener("submit", (e) => {
+  document.getElementById("secret-admin-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const entered = document.getElementById("secret-admin-passcode").value.trim();
     const expected = state.appConfig.adminPasscode || "expert2026";
-    if (entered !== expected) {
+    const ok = await verifySecret(entered, expected);
+    if (!ok) {
       showToast("Incorrect admin passcode.", "error");
       return;
     }
@@ -238,6 +293,7 @@ function openEditProfileModal() {
   document.getElementById("edit-profile-name").value = s.name || "";
   renderEditAvatarPreview();
   renderPresetAvatars();
+  pushOverlayHistory();
   document.getElementById("edit-profile-modal").classList.add("open");
 }
 
@@ -347,6 +403,7 @@ function openVideoModal(lecture) {
     : `<div class="glass-card empty-state"><p class="empty-state-title">No more lectures in this batch yet</p></div>`;
 
   switchWatchSubTab("upnext");
+  pushOverlayHistory();
   document.getElementById("video-watch-page").classList.add("open");
 }
 
@@ -367,6 +424,7 @@ function openPdfModal(note) {
   document.getElementById("pdf-modal-subject").textContent = note.subject || "PDF";
   document.getElementById("pdf-viewer-iframe").src = parsed.previewUrl;
   document.getElementById("pdf-open-external").href = parsed.openUrl || parsed.previewUrl;
+  pushOverlayHistory();
   document.getElementById("pdf-modal").classList.add("open");
 }
 
@@ -625,9 +683,14 @@ function renderBatchView() {
     return;
   }
 
-  state.selectedBatchId = batch.id;
+  const locked = Boolean(state.appConfig.lockStudentBatch);
+  const effectiveBatch = locked && state.student?.batchId ? (getBatchById(state.student.batchId) || batch) : batch;
+  state.selectedBatchId = effectiveBatch.id;
   const switcher = document.getElementById("batch-switcher-select");
-  if (switcher && switcher.value !== batch.id) switcher.value = batch.id;
+  if (switcher) {
+    switcher.classList.toggle("hidden", locked);
+    if (switcher.value !== effectiveBatch.id) switcher.value = effectiveBatch.id;
+  }
 
   const cover = document.getElementById("batch-cover-card");
   cover.className = `batch-cover-card ${batch.bannerColor || ""}`;
@@ -894,7 +957,8 @@ function bindEvents() {
       const snap = await getDoc(doc(db, "students", phone));
       if (!snap.exists()) return showToast("Number not registered. Use New Student tab.", "error");
       const data = snap.data();
-      if (data.password !== password) return showToast("Incorrect password. Please try again.", "error");
+      const pwOk = await verifySecret(password, data.password);
+      if (!pwOk) return showToast("Incorrect password. Please try again.", "error");
       safeStorage.set(STORAGE_PHONE_KEY, phone);
       showToast(`Welcome back, ${data.name}!`, "success");
       enterStudentSession(phone);
@@ -929,13 +993,15 @@ function bindEvents() {
         document.getElementById("login-phone").value = phone;
         return;
       }
+      const hashedPassword = await hashSecret(password);
+      const initialStatus = state.appConfig.autoApproveStudents === false ? "pending" : "approved";
       await setDoc(ref, {
         name,
         phone,
-        password,
+        password: hashedPassword,
         batchId,
         avatarUrl: "",
-        status: "approved",
+        status: initialStatus,
         createdAt: serverTimestamp()
       });
       safeStorage.set(STORAGE_PHONE_KEY, phone);
@@ -1024,6 +1090,14 @@ function bindEvents() {
     window.open(`https://wa.me/${rawNum}?text=${msg}`, "_blank", "noopener,noreferrer");
   });
 
+  document.getElementById("forgot-password-btn").addEventListener("click", () => {
+    const rawNum = String(state.appConfig.whatsappNumber || "").replace(/\D/g, "");
+    const enteredPhone = document.getElementById("login-phone").value.replace(/\D/g, "");
+    if (!rawNum) return showToast("Please contact your coaching teacher to reset your password.", "info");
+    const msg = encodeURIComponent(`Hello Sir, I forgot my Expert Study password.${enteredPhone ? " My mobile number is " + enteredPhone + "." : ""} Please help me reset it.`);
+    window.open(`https://wa.me/${rawNum}?text=${msg}`, "_blank", "noopener,noreferrer");
+  });
+
   document.getElementById("logout-btn").addEventListener("click", () => logoutStudent());
   document.getElementById("status-logout-btn").addEventListener("click", () => logoutStudent("Returned to login screen."));
 }
@@ -1038,7 +1112,8 @@ window.ExpertStudyApp = {
   openLiveClassModal,
   closeLiveClassModal,
   updateProfileStats,
-  showToast
+  showToast,
+  pushOverlayHistory
 };
 
 function init() {

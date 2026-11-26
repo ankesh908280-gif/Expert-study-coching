@@ -1,4 +1,4 @@
-// Expert Study — Production Utilities (v4 — 100% Real Firebase, Zero Mock Data)
+// Expert Study — Production Utilities (Final Release — 100% Real Firebase, SHA-256, Privacy-Enhanced YouTube)
 
 /**
  * Safe localStorage wrapper (never throws in restricted or private contexts).
@@ -42,6 +42,37 @@ export function escapeHtml(str) {
 }
 
 /**
+ * Hash a password or passcode using Web Crypto SHA-256 ("sha256:<hex>").
+ * Falls back safely if crypto.subtle is unavailable on non-HTTPS local testing.
+ */
+export async function hashSecret(plain) {
+  const text = String(plain || "");
+  if (typeof crypto !== "undefined" && crypto.subtle && typeof TextEncoder !== "undefined") {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    const hex = Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return `sha256:${hex}`;
+  }
+  return text;
+}
+
+/**
+ * Verify entered password/passcode against stored value.
+ * Supports BOTH SHA-256 hashed values AND legacy plain-text values seamlessly.
+ */
+export async function verifySecret(entered, stored) {
+  if (!stored) return false;
+  const rawStored = String(stored);
+  const rawEntered = String(entered || "");
+  if (rawStored.startsWith("sha256:")) {
+    const hashed = await hashSecret(rawEntered);
+    return hashed === rawStored;
+  }
+  return rawEntered === rawStored;
+}
+
+/**
  * Extract 11-character YouTube Video ID from any common YouTube URL format.
  */
 export function extractYouTubeId(url) {
@@ -54,7 +85,8 @@ export function extractYouTubeId(url) {
     /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
     /(?:youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
     /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
-    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
+    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/
   ];
 
   for (const regex of patterns) {
@@ -65,13 +97,12 @@ export function extractYouTubeId(url) {
 }
 
 /**
- * Convert ANY YouTube link into a clean, Error-153-safe embeddable URL.
- * Always use with referrerpolicy="strict-origin-when-cross-origin" on the iframe.
+ * Convert ANY YouTube link into a clean, privacy-enhanced, Error-153-safe embed URL.
  */
 export function parseYouTubeEmbedUrl(url) {
   const videoId = extractYouTubeId(url);
   if (!videoId) return "";
-  return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`;
+  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`;
 }
 
 /**
@@ -124,7 +155,7 @@ export function parseDrivePreviewUrl(url) {
 
 /**
  * Return Font Awesome icon class & glass color class for each subject.
- * Note: Checks Social Science BEFORE Science so "Social Science" never gets the flask icon.
+ * Checks Social Science BEFORE Science so "Social Science" always gets the globe icon.
  */
 export function getSubjectMeta(subject) {
   const key = String(subject || "").toLowerCase();
@@ -156,9 +187,6 @@ export const PRESET_AVATARS = [
   { id: "preset:amber", label: "Book Lover", bg: "linear-gradient(135deg, #EA580C 0%, #9A3412 100%)", icon: "fa-book-open-reader" }
 ];
 
-/**
- * Render an avatar HTML inner snippet for a student (supports data:image/... upload, preset:*, or initial fallback).
- */
 export function renderAvatarInner(avatarUrl, name = "S") {
   const initial = (name || "S").trim().charAt(0).toUpperCase() || "S";
   if (avatarUrl && String(avatarUrl).startsWith("data:image/")) {
@@ -205,9 +233,6 @@ export function compressImageToDataUrl(file, size = 160, quality = 0.75) {
   });
 }
 
-/**
- * Format Firestore Timestamp, Date, or epoch into a clean readable string.
- */
 export function formatDate(timestamp) {
   if (!timestamp) return "Just now";
   let dateObj;
@@ -218,19 +243,10 @@ export function formatDate(timestamp) {
   } else {
     dateObj = new Date(timestamp);
   }
-
   if (Number.isNaN(dateObj.getTime())) return "Recently";
-
-  return dateObj.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  });
+  return dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-/**
- * Show a smooth liquid-glass toast notification.
- */
 export function showToast(message, type = "info") {
   let container = document.getElementById("toast-container");
   if (!container) {
@@ -238,7 +254,6 @@ export function showToast(message, type = "info") {
     container.id = "toast-container";
     document.body.appendChild(container);
   }
-
   const toast = document.createElement("div");
   toast.className = `glass-toast toast-${type}`;
   toast.setAttribute("role", "status");

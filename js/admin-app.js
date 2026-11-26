@@ -11,6 +11,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  limitToLast,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
@@ -19,7 +20,9 @@ import {
   showToast,
   formatDate,
   escapeHtml,
-  safeStorage
+  safeStorage,
+  hashSecret,
+  verifySecret
 } from "./utils.js";
 
 const ADMIN_AUTH_KEY = "expert_study_admin_auth";
@@ -32,6 +35,9 @@ const adminState = {
     tagline: "Learn • Practice • Excel",
     whatsappNumber: "",
     adminPasscode: "expert2026",
+    defaultTeacherName: "Uttam Sir",
+    autoApproveStudents: true,
+    lockStudentBatch: false,
     heroBanner: { title: "Board Topper Batch 2026", subtitle: "Complete NCERT + PYQs + Weekly MCQ Tests", imageUrl: "" },
     liveClass: { isLive: false, title: "", batchId: "all", youtubeUrl: "" }
   },
@@ -45,6 +51,19 @@ const adminState = {
   draftQuestions: [],
   pendingDelete: null
 };
+
+async function withSubmitLock(btn, fn) {
+  if (!btn || btn.disabled) return;
+  const origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
+  try {
+    await fn();
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+  }
+}
 
 // ==================== FIREBASE SYNC STATUS PILL ====================
 function setSyncStatus(ok, detail = "") {
@@ -180,7 +199,13 @@ function renderConfigControls() {
   document.getElementById("set-app-name").value = cfg.appName || "Expert Study";
   document.getElementById("set-tagline").value = cfg.tagline || "Learn • Practice • Excel";
   document.getElementById("set-whatsapp").value = cfg.whatsappNumber || "";
-  document.getElementById("set-passcode").value = cfg.adminPasscode || "expert2026";
+  document.getElementById("set-passcode").value = "";
+  document.getElementById("set-teacher-name").value = cfg.defaultTeacherName || "Uttam Sir";
+  document.getElementById("set-auto-approve").value = String(cfg.autoApproveStudents !== false);
+  document.getElementById("set-lock-batch").value = String(Boolean(cfg.lockStudentBatch));
+  if (!document.getElementById("edit-lec-id").value) {
+    document.getElementById("lec-teacher").value = cfg.defaultTeacherName || "Uttam Sir";
+  }
   document.getElementById("set-hero-title").value = cfg.heroBanner?.title || "Board Topper Batch 2026";
   document.getElementById("set-hero-subtitle").value = cfg.heroBanner?.subtitle || "Complete NCERT + PYQs + Weekly MCQ Tests";
 }
@@ -374,6 +399,7 @@ function renderStudentsList() {
             <div style="display:flex; gap:6px; flex-shrink:0;">
               ${st !== "approved" ? `<button type="button" class="btn btn-success-soft btn-xs" data-student-status="approved" data-student-phone="${escapeHtml(s.phone)}">Approve</button>` : ""}
               ${st !== "blocked" ? `<button type="button" class="btn btn-danger-soft btn-xs" data-student-status="blocked" data-student-phone="${escapeHtml(s.phone)}">Block</button>` : `<button type="button" class="btn btn-success-soft btn-xs" data-student-status="approved" data-student-phone="${escapeHtml(s.phone)}">Unblock</button>`}
+              <button type="button" class="btn btn-glass btn-xs" data-reset-pw-phone="${escapeHtml(s.phone)}" data-reset-pw-name="${escapeHtml(s.name)}" title="Reset Password"><i class="fa-solid fa-key"></i></button>
               <button type="button" class="btn btn-danger-soft btn-xs" data-del-col="students" data-del-id="${escapeHtml(s.phone)}" data-del-label="${escapeHtml(s.name)}" title="Delete Student"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
@@ -424,7 +450,7 @@ function parseBulkQuestions(rawText) {
 function resetLectureForm() {
   document.getElementById("add-lecture-form").reset();
   document.getElementById("edit-lec-id").value = "";
-  document.getElementById("lec-teacher").value = "Uttam Sir";
+  document.getElementById("lec-teacher").value = adminState.appConfig.defaultTeacherName || "Uttam Sir";
   document.getElementById("lec-thumb-preview").classList.add("hidden");
   document.getElementById("lec-form-heading").innerHTML = `<i class="fa-solid fa-circle-play" style="color:var(--brand-blue);"></i> Add Recorded Lecture`;
   document.getElementById("lec-submit-btn").innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Publish Lecture`;
@@ -462,8 +488,9 @@ function resetTestForm() {
 // ==================== DELETE & SUBMISSIONS MODALS ====================
 function openDeleteConfirm(col, id, label) {
   adminState.pendingDelete = { col, id };
+  const extra = col === "batches" ? " Note: Lectures and students linked to this batch will need to be reassigned." : "";
   document.getElementById("confirm-delete-text").textContent =
-    `Delete "${label || "this item"}" permanently from Firebase?`;
+    `Delete "${label || "this item"}" permanently from Firebase?${extra}`;
   document.getElementById("admin-confirm-modal").classList.add("open");
 }
 
@@ -565,7 +592,7 @@ function startAdminListeners() {
     renderStudentsList();
   }, onErr);
 
-  onSnapshot(query(collection(db, "liveChat"), orderBy("createdAt", "asc")), (snap) => {
+  onSnapshot(query(collection(db, "liveChat"), orderBy("createdAt", "asc"), limitToLast(60)), (snap) => {
     const box = document.getElementById("admin-live-chat-messages");
     document.getElementById("admin-chat-count").textContent = `${snap.size} msgs`;
     if (snap.empty) {
@@ -595,11 +622,12 @@ function bindAdminEvents() {
   document.getElementById("admin-theme-toggle").addEventListener("click", toggleTheme);
   document.getElementById("admin-auth-theme-btn").addEventListener("click", toggleTheme);
 
-  document.getElementById("admin-login-form").addEventListener("submit", (e) => {
+  document.getElementById("admin-login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const entered = document.getElementById("admin-passcode-input").value.trim();
     const expected = adminState.appConfig.adminPasscode || "expert2026";
-    if (entered !== expected) return showToast("Invalid admin passcode.", "error");
+    const ok = await verifySecret(entered, expected);
+    if (!ok) return showToast("Invalid admin passcode.", "error");
     safeStorage.set(ADMIN_AUTH_KEY, "unlocked");
     document.getElementById("admin-login-screen").classList.add("hidden");
     document.getElementById("admin-app-shell").classList.remove("hidden");
@@ -719,7 +747,7 @@ function bindAdminEvents() {
     input.value = "";
     try {
       await addDoc(collection(db, "liveChat"), {
-        senderName: "Uttam Sir",
+        senderName: adminState.appConfig.defaultTeacherName || "Uttam Sir",
         senderPhone: "teacher",
         senderRole: "teacher",
         message,
@@ -752,6 +780,7 @@ function bindAdminEvents() {
   // Add / Update Lecture
   document.getElementById("add-lecture-form").addEventListener("submit", async (e) => {
     e.preventDefault();
+    await withSubmitLock(document.getElementById("lec-submit-btn"), async () => {
     const editId = document.getElementById("edit-lec-id").value;
     const rawPdfUrl = document.getElementById("lec-pdf-url").value.trim();
     const parsedPdf = rawPdfUrl ? parseDrivePreviewUrl(rawPdfUrl) : { previewUrl: "" };
@@ -783,11 +812,13 @@ function bindAdminEvents() {
       setSyncStatus(false, err.message);
       showToast(`Save failed: ${err.message}`, "error");
     }
+    });
   });
 
   // Add / Update Standalone PDF Note
   document.getElementById("add-note-form").addEventListener("submit", async (e) => {
     e.preventDefault();
+    await withSubmitLock(document.getElementById("note-submit-btn"), async () => {
     const editId = document.getElementById("edit-note-id").value;
     const rawUrl = document.getElementById("note-url").value.trim();
     const parsed = parseDrivePreviewUrl(rawUrl);
@@ -814,11 +845,13 @@ function bindAdminEvents() {
       setSyncStatus(false, err.message);
       showToast(`Save failed: ${err.message}`, "error");
     }
+    });
   });
 
   // Add / Update Notice
   document.getElementById("add-notice-form").addEventListener("submit", async (e) => {
     e.preventDefault();
+    await withSubmitLock(document.getElementById("notice-submit-btn"), async () => {
     const editId = document.getElementById("edit-notice-id").value;
     const payload = {
       batchId: document.getElementById("notice-batch").value || "all",
@@ -839,6 +872,7 @@ function bindAdminEvents() {
       setSyncStatus(false, err.message);
       showToast(`Save failed: ${err.message}`, "error");
     }
+    });
   });
 
   // Add / Update Batch
@@ -927,6 +961,7 @@ function bindAdminEvents() {
   });
 
   document.getElementById("publish-test-btn").addEventListener("click", async () => {
+    await withSubmitLock(document.getElementById("publish-test-btn"), async () => {
     const editId = document.getElementById("edit-test-id").value;
     const title = document.getElementById("test-title-input").value.trim();
     const batchId = document.getElementById("test-batch-select").value;
@@ -953,6 +988,7 @@ function bindAdminEvents() {
       setSyncStatus(false, err.message);
       showToast(`Failed: ${err.message}`, "error");
     }
+    });
   });
 
   // Students search/filter & batch reassignment
@@ -973,27 +1009,53 @@ function bindAdminEvents() {
   // Settings Save
   document.getElementById("app-settings-form").addEventListener("submit", async (e) => {
     e.preventDefault();
+    const newPassRaw = document.getElementById("set-passcode").value.trim();
+    const updateObj = {
+      appName: document.getElementById("set-app-name").value.trim(),
+      tagline: document.getElementById("set-tagline").value.trim(),
+      whatsappNumber: document.getElementById("set-whatsapp").value.trim(),
+      defaultTeacherName: document.getElementById("set-teacher-name").value.trim() || "Uttam Sir",
+      autoApproveStudents: document.getElementById("set-auto-approve").value === "true",
+      lockStudentBatch: document.getElementById("set-lock-batch").value === "true",
+      heroBanner: {
+        title: document.getElementById("set-hero-title").value.trim(),
+        subtitle: document.getElementById("set-hero-subtitle").value.trim(),
+        imageUrl: ""
+      }
+    };
+    if (newPassRaw) {
+      updateObj.adminPasscode = await hashSecret(newPassRaw);
+    }
     try {
-      await setDoc(
-        doc(db, "settings", "appConfig"),
-        {
-          appName: document.getElementById("set-app-name").value.trim(),
-          tagline: document.getElementById("set-tagline").value.trim(),
-          whatsappNumber: document.getElementById("set-whatsapp").value.trim(),
-          adminPasscode: document.getElementById("set-passcode").value.trim() || "expert2026",
-          heroBanner: {
-            title: document.getElementById("set-hero-title").value.trim(),
-            subtitle: document.getElementById("set-hero-subtitle").value.trim(),
-            imageUrl: ""
-          }
-        },
-        { merge: true }
-      );
+      await setDoc(doc(db, "settings", "appConfig"), updateObj, { merge: true });
+      document.getElementById("set-passcode").value = "";
       showToast("Settings saved to Firebase!", "success");
     } catch (err) {
       setSyncStatus(false, err.message);
       showToast(`Save failed: ${err.message}`, "error");
     }
+  });
+
+  // Student Password Reset Modal wiring
+  document.getElementById("close-reset-pw-modal").addEventListener("click", () => {
+    document.getElementById("admin-reset-pw-modal").classList.remove("open");
+  });
+  document.getElementById("admin-reset-pw-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const phone = document.getElementById("reset-pw-phone").value;
+    const newPw = document.getElementById("reset-pw-input").value.trim();
+    if (!phone || newPw.length < 4) return showToast("Password must be at least 4 characters.", "error");
+    await withSubmitLock(document.getElementById("reset-pw-submit-btn"), async () => {
+      try {
+        const hashed = await hashSecret(newPw);
+        await updateDoc(doc(db, "students", phone), { password: hashed });
+        document.getElementById("admin-reset-pw-modal").classList.remove("open");
+        document.getElementById("reset-pw-input").value = "";
+        showToast("Student password updated!", "success");
+      } catch (err) {
+        showToast(`Reset failed: ${err.message}`, "error");
+      }
+    });
   });
 
   // Delegated Edit / Delete / Submissions / Student Status actions
@@ -1122,6 +1184,16 @@ function bindAdminEvents() {
     const viewSubsBtn = e.target.closest("[data-view-subs]");
     if (viewSubsBtn) {
       openSubmissionsModal(viewSubsBtn.getAttribute("data-view-subs"));
+      return;
+    }
+
+    const resetPwBtn = e.target.closest("[data-reset-pw-phone]");
+    if (resetPwBtn) {
+      document.getElementById("reset-pw-phone").value = resetPwBtn.getAttribute("data-reset-pw-phone");
+      document.getElementById("reset-pw-student-label").textContent =
+        `Set a new password for ${resetPwBtn.getAttribute("data-reset-pw-name")} (+91 ${resetPwBtn.getAttribute("data-reset-pw-phone")}).`;
+      document.getElementById("reset-pw-input").value = "";
+      document.getElementById("admin-reset-pw-modal").classList.add("open");
       return;
     }
 

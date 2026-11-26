@@ -6,6 +6,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  limitToLast,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
@@ -45,6 +46,7 @@ function openLiveClassWithChat(liveClass) {
   if (extLink) extLink.href = getYouTubeWatchUrl(liveClass.youtubeUrl);
 
   mountLiveChatUI();
+  window.ExpertStudyApp?.pushOverlayHistory?.();
   document.getElementById("live-class-modal").classList.add("open");
 }
 
@@ -96,7 +98,7 @@ function mountLiveChatUI() {
   });
 
   if (ltState.unsubChat) ltState.unsubChat();
-  const chatQuery = query(collection(db, "liveChat"), orderBy("createdAt", "asc"));
+  const chatQuery = query(collection(db, "liveChat"), orderBy("createdAt", "asc"), limitToLast(60));
   ltState.unsubChat = onSnapshot(chatQuery, (snap) => {
     const listEl = document.getElementById("live-chat-messages");
     if (!listEl) return;
@@ -330,6 +332,7 @@ function startExamArena(test) {
   };
 
   const overlay = document.getElementById("exam-arena-overlay");
+  window.ExpertStudyApp?.pushOverlayHistory?.();
   overlay.classList.remove("hidden");
   renderExamQuestion();
 
@@ -445,7 +448,7 @@ function renderExamQuestion() {
   const submitBtn = document.getElementById("exam-submit-btn");
   if (submitBtn) submitBtn.addEventListener("click", submitExam);
 
-  document.getElementById("exam-exit-btn").addEventListener("click", closeExamArena);
+  document.getElementById("exam-exit-btn").addEventListener("click", promptExamExit);
 }
 
 async function submitExam() {
@@ -585,9 +588,39 @@ function subscribeTestsAndResults() {
   });
 }
 
+function promptExamExit() {
+  const modal = document.getElementById("exam-exit-confirm-modal");
+  if (modal) modal.classList.add("open");
+  else closeExamArena();
+}
+
+function hideExamExitModal() {
+  const modal = document.getElementById("exam-exit-confirm-modal");
+  if (modal) modal.classList.remove("open");
+}
+
+["cancel-exam-exit-btn", "cancel-exam-exit-x"].forEach((id) => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("click", hideExamExitModal);
+});
+const confirmExitBtn = document.getElementById("confirm-exam-exit-btn");
+if (confirmExitBtn) {
+  confirmExitBtn.addEventListener("click", () => {
+    hideExamExitModal();
+    closeExamArena();
+  });
+}
+
 window.ExpertStudyHooks = {
   openLiveClass: openLiveClassWithChat,
-  closeLiveChat
+  closeLiveChat,
+  handleBackButton: () => {
+    if (ltState.activeExam && !ltState.activeExam.submitted) {
+      promptExamExit();
+    } else if (!document.getElementById("exam-arena-overlay").classList.contains("hidden")) {
+      closeExamArena();
+    }
+  }
 };
 
 window.addEventListener("expert-study:student-ready", () => {
