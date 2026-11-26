@@ -470,8 +470,28 @@
                   <input type="tel" id="set-whatsapp" class="glass-input" placeholder="e.g. 919876543210" />
                 </div>
                 <div class="form-group">
-                  <label class="form-label" for="set-passcode">Admin Passcode</label>
-                  <input type="text" id="set-passcode" class="glass-input" required />
+                  <label class="form-label" for="set-passcode">New Admin Passcode (Optional)</label>
+                  <input type="text" id="set-passcode" class="glass-input" placeholder="Leave blank to keep current" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="set-teacher-name">Default Teacher Name (for Lectures & Live Chat)</label>
+                <input type="text" id="set-teacher-name" class="glass-input" placeholder="e.g. Uttam Sir" required />
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="set-auto-approve">Auto-Approve New Students</label>
+                  <select id="set-auto-approve" class="glass-select">
+                    <option value="true">ON (Instant Access)</option>
+                    <option value="false">OFF (Manual Approval)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="set-lock-batch">Lock Students to Own Batch</label>
+                  <select id="set-lock-batch" class="glass-select">
+                    <option value="false">OFF (Can Browse All)</option>
+                    <option value="true">ON (Own Batch Only)</option>
+                  </select>
                 </div>
               </div>
               <div class="form-group">
@@ -520,6 +540,27 @@
         <button type="button" class="btn-icon" id="close-submissions-modal" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body" id="submissions-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- STUDENT PASSWORD RESET MODAL -->
+  <div id="admin-reset-pw-modal" class="glass-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="glass-modal" style="max-width:390px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-key" style="color:var(--brand-gold);"></i> Reset Student Password</h3>
+        <button type="button" class="btn-icon" id="close-reset-pw-modal" aria-label="Cancel"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="empty-state-sub" id="reset-pw-student-label" style="margin-bottom:12px;">Set a new password for student.</p>
+        <form id="admin-reset-pw-form">
+          <input type="hidden" id="reset-pw-phone" value="" />
+          <div class="form-group">
+            <label class="form-label" for="reset-pw-input">New Password (min 4 characters)</label>
+            <input type="text" id="reset-pw-input" class="glass-input" minlength="4" placeholder="e.g. 1234" required />
+          </div>
+          <button type="submit" id="reset-pw-submit-btn" class="btn btn-primary btn-block"><i class="fa-solid fa-floppy-disk"></i> Save New Password</button>
+        </form>
+      </div>
     </div>
   </div>
 

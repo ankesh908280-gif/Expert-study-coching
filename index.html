@@ -75,6 +75,9 @@
           <button type="submit" class="btn btn-primary btn-block" id="login-submit-btn">
             <i class="fa-solid fa-arrow-right-to-bracket"></i> Login to Classroom
           </button>
+          <button type="button" id="forgot-password-btn" class="btn btn-glass btn-block btn-xs" style="margin-top:10px;">
+            <i class="fa-brands fa-whatsapp" style="color:var(--color-whatsapp);"></i> Forgot Password? Contact Teacher
+          </button>
           <p class="auth-helper-note">New here? Switch to <strong>New Student</strong> above to register with your mobile number.</p>
         </form>
 
@@ -556,6 +559,23 @@
 
   <!-- ==================== FULL-SCREEN EXAM ARENA OVERLAY ==================== -->
   <div id="exam-arena-overlay" class="exam-overlay hidden"></div>
+
+  <!-- ==================== EXAM EXIT CONFIRMATION MODAL ==================== -->
+  <div id="exam-exit-confirm-modal" class="glass-modal-backdrop" style="z-index:150;" role="dialog" aria-modal="true">
+    <div class="glass-modal" style="max-width:380px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--brand-gold);"></i> Exit Test?</h3>
+        <button type="button" class="btn-icon" id="cancel-exam-exit-x" aria-label="Cancel"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="empty-state-sub" style="margin-bottom:16px;">Are you sure you want to exit? Your current answers will not be submitted.</p>
+        <div style="display:flex; gap:10px;">
+          <button type="button" id="cancel-exam-exit-btn" class="btn btn-glass" style="flex:1;">Continue Test</button>
+          <button type="button" id="confirm-exam-exit-btn" class="btn btn-danger" style="flex:1;">Exit Test</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="./js/student-app.js"></script>
   <script type="module" src="./js/live-test.js"></script>

@@ -1,5 +1,5 @@
-// Expert Study — PWA Service Worker (GitHub Pages Relative-Path Safe)
-const CACHE_NAME = "expert-study-v3";
+// Expert Study — PWA Service Worker (v4 — Network-First Freshness for HTML/CSS/JS)
+const CACHE_NAME = "expert-study-v4";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -39,19 +39,27 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
 
-  // Network-first for Firebase, Google APIs, YouTube, and HTML navigations
-  const isNetworkFirst =
-    req.mode === "navigate" ||
+  // Never cache Firebase, YouTube, or Drive API traffic
+  if (
     url.hostname.includes("firestore.googleapis.com") ||
-    url.hostname.includes("gstatic.com") ||
-    url.hostname.includes("youtube.com") ||
-    url.hostname.includes("drive.google.com");
+    url.hostname.includes("youtube") ||
+    url.hostname.includes("drive.google.com")
+  ) {
+    return;
+  }
 
-  if (isNetworkFirst) {
+  // Network-First for HTML, CSS, and JS so GitHub Pages updates appear immediately
+  const isAppCode =
+    req.mode === "navigate" ||
+    url.pathname.endsWith(".html") ||
+    url.pathname.endsWith(".css") ||
+    url.pathname.endsWith(".js");
+
+  if (isAppCode) {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          if (req.mode === "navigate" && res.ok) {
+          if (res.ok && url.origin === self.location.origin) {
             const copy = res.clone();
             caches.open(CACHE_NAME).then((c) => c.put(req, copy));
           }
@@ -62,7 +70,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for local static assets
+  // Cache-First for images & icons
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
